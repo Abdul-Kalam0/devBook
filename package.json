@@ -1,0 +1,21 @@
+{
+  "name": "devbook-backend",
+  "version": "1.0.0",
+  "description": "tinder for dev",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "javaScript",
+    "Express",
+    "MondoDB",
+    "Node.js"
+  ],
+  "author": "Abdul Kalam",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
