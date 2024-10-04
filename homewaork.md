@@ -1,0 +1,4 @@
+- Create a Express Server
+- Push it onto git
+- Order of Route matters and is very important
+- to test the API we will use postman software
