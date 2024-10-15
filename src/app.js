@@ -1,38 +1,29 @@
 const express = require("express");
-
+const connectDB = require("./config/database");
+const User = require("./models/user");
 const app = express();
 
-//// this function is know as request handler
-
-// this will handle GET calls to "/user"
-app.get("/user", (req, res) => {
-  res.send({ firstName: "Abdul", lastName: "Kalam" });
+//Created signup API
+app.post("/signup", async (req, res) => {
+  //Creating the new Instance
+  const user = new User({
+    firstName: "islam",
+    lastName: "nabi",
+    mailId: "islam@nabi.com",
+  });
+  try {
+    await user.save();
+    res.send("Added user Succesfully");
+  } catch (err) {
+    res.status(400).send("Error data is not saved" + err.message());
+  }
 });
 
-// this will handle PATCH calls to "/user"
-
-app.patch("/user", (req, res) => {
-  console.log("Bug is getting fixed");
-  res.send("Bug fixed");
-});
-
-// this will handle POST calls to "/user"
-app.post("/user", (req, res) => {
-  console.log("saving data to DB");
-  res.send("data successfully saved");
-});
-
-// this will handle DELETE calls to "/user"
-app.delete("/user", (req, res) => {
-  console.log("Deleting the data");
-  res.send("Data Deleted Successfully");
-});
-
-// this will match all the HTTP metgod API calls to /test
-app.use("/test", (req, res) => {
-  res.send("test");
-});
-
-app.listen(3000, () => {
-  console.log("Server is successfully listening on port 3000.....");
-});
+connectDB()
+  .then(() => {
+    console.log("Connection to Database is Succesfull...");
+    app.listen(3000, () => {
+      console.log("Server is successfully listening on port 3000.....");
+    });
+  })
+  .catch((err) => console.error("Connetion to Database is failed!!!"));
