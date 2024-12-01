@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 // schmea of user
 // we will add some constrains if it is satisfied then only we will add the data
 const userSchema = mongoose.Schema(
@@ -54,5 +56,28 @@ const userSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+// helper function {this keyword} will not work with arraow function or its working is diffrent
+
+// to vlidate the password
+userSchema.methods.validateSchemaPassword = async function (
+  passwordInputByUser
+) {
+  const user = this;
+  const passwordHash = user.password;
+  const isPasswordValid = await bcrypt.compare(
+    passwordInputByUser,
+    passwordHash
+  );
+  return isPasswordValid;
+};
+
+// to send the jet token
+
+userSchema.methods.getJWT = async function () {
+  const user = this;
+  const token = await jwt.sign({ _id: user._id }, "abdul", { expiresIn: "1d" });
+  return token;
+};
 
 module.exports = mongoose.model("user", userSchema);

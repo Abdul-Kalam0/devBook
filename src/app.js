@@ -7,8 +7,15 @@ const { validateSignUpData } = require("./utils/validation");
 
 const validator = require("validator");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
 
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/Auth");
+
+// to read json format data in console
 app.use(express.json());
+// to read the cookies in the console
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -51,9 +58,18 @@ app.post("/login", async (req, res) => {
 
     // compare the passwordHash is same as passwordHash stored in DB
     // it return true/false if true login else password is incorrect
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // validSchemaPassword is a helper function nside modules/user
+    // i am calling validateSchemaPassword on user bcoz i have to validate the pass on the current user in user
+    const isPasswordValid = await user.validateSchemaPassword(password);
 
     if (isPasswordValid) {
+      // if password is also valid we will write the code for JWT bcoz we will send it with the data
+      // add the token to cookie and resnd the response back to user
+      // getJWT is a helper function inside modules/user
+      const token = await user.getJWT();
+      console.log(token);
+
+      res.cookie("token", token);
       res.send("Loged In sucesfully");
     } else {
       throw new Error("Invalid password");
@@ -63,91 +79,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// find user by email
-// app.get("/user", async (req, res) => {
-//   const userEmail = req.body.email;
-//   try {
-//     const user = await User.findOne({ email: userEmail });
-//     if (user.length === 0) {
-//       res.status(404).send("user not found");
-//     }
-//     res.send(user);
-//   } catch (err) {
-//     console.error("something went wrong");
-//   }
-// });
-
-// find the user by id
-app.get("/user", async (req, res) => {
-  const userId = req.body._id;
-  console.log(userId);
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const user = await User.findById(userId); // Directly pass the ID
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
+    const user = req.user;
     res.send(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
+    res.status(404).send("ERROR: " + err.message);
   }
 });
 
-//get all user
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (err) {}
-});
-
-// get the first user form the collecton of users
-app.get("/feed", async (req, res) => {
-  const { email } = req.body;
-  console.log(email);
-
-  try {
-    const users = await User.findOne({ email: email });
-    res.send(users);
-  } catch (err) {}
-});
-
-// delete the user by id
-app.get("/delete", async (req, res) => {
-  const userId = req.body._id;
-  try {
-    const user = await User.findByIdAndDelete({ _id: userId });
-    res.send(user);
-  } catch (err) {}
-});
-
-// update the user data
-app.patch("/update/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-
-  try {
-    // what fields will be allowed to update
-    const ALLOWED_UPDATE = ["photourl", "about", "gender", "age"];
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      ALLOWED_UPDATE.every(k)
-    );
-    if (!isUpdateAllowed) {
-      throw new Error("update not allowed");
-    }
-    // skills more than 10 are not allowed
-    if (data?.skills?.length > 10) {
-      throw new Error("Skills more that 10 are not allowed");
-    }
-    const user = await User.findByIdAndUpdate(userId, data, {
-      returnDocument: "after",
-    });
-    console.log(user);
-
-    res.send("done");
-  } catch (err) {
-    res.send("somthing went wrong", +err.message);
-  }
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  const user = req.user;
+  // sending the connection request only if the user is login for that we will use userAuth middleware
+  res.send(user.firstName + " sent the connect request");
 });
 
 // first connect with db then to server
